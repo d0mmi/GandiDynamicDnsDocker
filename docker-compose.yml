@@ -1,0 +1,6 @@
+services:
+  gandidynamicdns:
+    build: .
+    restart: no
+    volumes:
+      - ./appsettings.json:/app/appsettings.json
