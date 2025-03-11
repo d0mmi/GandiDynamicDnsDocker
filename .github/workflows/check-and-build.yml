@@ -27,6 +27,7 @@ jobs:
         else
           echo "No new release found"
           exit 0
+        fi  
 
     - name: Build and push Docker image
       if: env.LAST_RELEASE == env.tag
