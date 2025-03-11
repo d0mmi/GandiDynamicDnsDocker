@@ -3,7 +3,7 @@ name: Check and Build Docker Image
 on:
   workflow_dispatch:  # Allows manual triggering
   schedule:
-    - cron: "0 */6 * * *"  # Runs every 6 hours
+    - cron: "0 0 * * 0"  # Runs once a week (every Sunday at midnight)
 
 jobs:
   build:
@@ -33,5 +33,7 @@ jobs:
       if: env.LAST_RELEASE == env.tag
       run: |
         docker build -t d0mmi/gandidynamicdns:${{ env.tag }} .
+        docker tag d0mmi/gandidynamicdns:${{ env.tag }} d0mmi/gandidynamicdns:latest
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
         docker push d0mmi/gandidynamicdns:${{ env.tag }}
+        docker push d0mmi/gandidynamicdns:latest
