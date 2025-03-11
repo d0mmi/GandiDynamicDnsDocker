@@ -1,0 +1,35 @@
+name: Check and Build Docker Image
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # Runs every 6 hours
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout this repository
+      uses: actions/checkout@v2
+
+    - name: Get latest release tag from Aldaviva/GandiDynamicDns
+      id: get_release
+      run: |
+        latest_release=$(curl -s https://api.github.com/repos/Aldaviva/GandiDynamicDns/releases/latest | jq -r .tag_name)
+        echo "::set-output name=tag::$latest_release"
+
+    - name: Check if the release is new
+      run: |
+        if [ "${{ secrets.LAST_RELEASE }}" != "${{ steps.get_release.outputs.tag }}" ]; then
+          echo "New release found: ${{ steps.get_release.outputs.tag }}"
+          echo "LAST_RELEASE=${{ steps.get_release.outputs.tag }}" >> $GITHUB_ENV
+        else
+          echo "No new release found"
+          exit 0
+
+    - name: Build and push Docker image
+      if: env.LAST_RELEASE == steps.get_release.outputs.tag
+      run: |
+        docker build -t d0mmi/gandidynamicdns:${{ steps.get_release.outputs.tag }} .
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        docker push d0mmi/gandidynamicdns:${{ steps.get_release.outputs.tag }}
