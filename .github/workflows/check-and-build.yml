@@ -6,7 +6,7 @@ on:
     - cron: "0 0 * * 0"  # Runs once a week (every Sunday at midnight)
 
 jobs:
-  build:
+  build-linux64:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout this repository
@@ -40,9 +40,37 @@ jobs:
         docker push d0mmi/gandidynamicdns:${{ env.tag }}-linux64
         docker push d0mmi/gandidynamicdns:latest-linux64
         docker push d0mmi/gandidynamicdns:latest
+    
+    - name: Update LAST_RELEASE variable
+      if: env.LAST_RELEASE == env.tag
+      run: |
+        gh api -X PATCH /repos/${{ github.repository }}/actions/variables/LAST_RELEASE -f name=LAST_RELEASE -f value=${{ env.tag }}
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  build-arm:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: Checkout this repository
+      uses: actions/checkout@v2
+
+    - name: Get latest release tag from Aldaviva/GandiDynamicDns
+      id: get_release
+      run: |
+        latest_release=$(curl -s https://api.github.com/repos/Aldaviva/GandiDynamicDns/releases/latest | jq -r .tag_name)
+        echo "tag=$latest_release" >> $GITHUB_ENV
+
+    - name: Check if the release is new
+      run: |
+        if [ "${{ vars.LAST_RELEASE_ARM }}" != "${{ env.tag }}" ]; then
+          echo "New release found: ${{ env.tag }}"
+          echo "LAST_RELEASE_ARM=${{ env.tag }}" >> $GITHUB_ENV
+        else
+          echo "No new release found"
+          exit 0
+        fi  
 
     - name: Build and push arm Docker image
-      if: env.LAST_RELEASE == env.tag
+      if: env.LAST_RELEASE_ARM == env.tag
       run: |
         docker build -t d0mmi/gandidynamicdns:${{ env.tag }}-arm ./arm
         docker tag d0mmi/gandidynamicdns:${{ env.tag }}-arm d0mmi/gandidynamicdns:latest-arm
@@ -51,7 +79,7 @@ jobs:
         docker push d0mmi/gandidynamicdns:latest-arm
 
     - name: Build and push arm64 Docker image
-      if: env.LAST_RELEASE == env.tag
+      if: env.LAST_RELEASE_ARM == env.tag
       run: |
         docker build -t d0mmi/gandidynamicdns:${{ env.tag }}-arm64 ./arm64
         docker tag d0mmi/gandidynamicdns:${{ env.tag }}-arm64 d0mmi/gandidynamicdns:latest-arm64
@@ -59,9 +87,9 @@ jobs:
         docker push d0mmi/gandidynamicdns:${{ env.tag }}-arm64
         docker push d0mmi/gandidynamicdns:latest-arm64
     
-    - name: Update LAST_RELEASE variable
-      if: env.LAST_RELEASE == env.tag
+    - name: Update LAST_RELEASE_ARM variable
+      if: env.LAST_RELEASE_ARM == env.tag
       run: |
-        gh api -X PATCH /repos/${{ github.repository }}/actions/variables/LAST_RELEASE -f name=LAST_RELEASE -f value=${{ env.tag }}
+        gh api -X PATCH /repos/${{ github.repository }}/actions/variables/LAST_RELEASE_ARM -f name=LAST_RELEASE_ARM -f value=${{ env.tag }}
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
