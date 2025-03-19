@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/runtime:8.0
+FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim-arm32v7
 
 # Install dependencies
 RUN apt-get update && apt-get install -y wget unzip && rm -rf /var/lib/apt/lists/*
