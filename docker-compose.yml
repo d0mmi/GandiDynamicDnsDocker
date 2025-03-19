@@ -1,6 +1,6 @@
 services:
   gandidynamicdns:
-    build: .
+    build: ./linux64
     restart: no
     volumes:
       - ./appsettings.json:/app/appsettings.json
