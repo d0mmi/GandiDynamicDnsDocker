@@ -48,7 +48,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
   build-arm:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout this repository
       uses: actions/checkout@v2
